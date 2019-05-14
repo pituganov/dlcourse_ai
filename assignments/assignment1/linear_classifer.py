@@ -38,7 +38,7 @@ def cross_entropy_loss(probs, target_index):
     '''
     # TODO implement cross-entropy
     # Your final implementation shouldn't have any loops
-    return - np.sum(probs * np.eye(probs.shape[0])[target_index])
+    return -np.sum(np.log(probs) * np.eye(probs.shape[0])[target_index])
 
 
 def softmax_with_cross_entropy(predictions, target_index):
@@ -58,10 +58,11 @@ def softmax_with_cross_entropy(predictions, target_index):
     '''
     # TODO implement softmax with cross-entropy
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
     probs = softmax(predictions)
 
     loss = cross_entropy_loss(probs, target_index)
+
+    dprediction = 0
 
     return loss, dprediction
 
@@ -81,7 +82,9 @@ def l2_regularization(W, reg_strength):
 
     # TODO: implement l2 regularization and gradient
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
+    loss = reg_strength * np.sum(W**2)
+
+    grad = reg_strength * 2 * np.sum(W)
 
     return loss, grad
 
@@ -129,7 +132,7 @@ class LinearSoftmaxClassifier():
 
         num_train = X.shape[0]
         num_features = X.shape[1]
-        num_classes = np.max(y)+1
+        num_classes = np.max(y) + 1
         if self.W is None:
             self.W = 0.001 * np.random.randn(num_features, num_classes)
 
