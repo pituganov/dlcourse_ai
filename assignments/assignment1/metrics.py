@@ -21,7 +21,7 @@ def binary_classification_metrics(prediction, ground_truth):
     # https://en.wikipedia.org/wiki/Precision_and_recall
     # https://en.wikipedia.org/wiki/F1_score
 
-    precision = sum(true_positive) / len(prediction)
+    precision = sum(true_positive) / sum(prediction == True)
     recall = sum(true_positive) / sum(ground_truth == True)
     accuracy = sum(prediction == ground_truth) / len(prediction)
     f1 = 2 * recall * precision / (recall + precision)
