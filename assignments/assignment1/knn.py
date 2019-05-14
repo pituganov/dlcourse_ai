@@ -1,6 +1,7 @@
+from collections import Counter
+
 import numpy as np
 from scipy.spatial.distance import cdist
-from scipy.stats import mode
 
 
 class KNN:
@@ -59,7 +60,6 @@ class KNN:
             for i_train in range(num_train):
                 dists[i_test][i_train] = np.sum(
                     np.abs((self.train_X[i_train] - X[i_test])))
-                # TODO: Fill dists[i_test][i_train]
 
         return dists
 
@@ -79,8 +79,6 @@ class KNN:
         num_test = X.shape[0]
         dists = np.zeros((num_test, num_train), np.float32)
         for i_test in range(num_test):
-            # TODO: Fill the whole row of dists[i_test]
-            # without additional loops
             dists[i_test] = np.sum(np.abs(self.train_X - X[i_test]), axis=1)
 
         return dists
@@ -101,7 +99,8 @@ class KNN:
         num_test = X.shape[0]
         # Using float32 to to save memory - the default is float64
         dists = np.zeros((num_test, num_train), np.float32)
-        dists = cdist(X, self.train_X, 'cityblock')
+        dists = np.sum(np.abs(self.train_X[:, None, :] - X[None, :, :]),
+                       axis=2).T
         return dists
 
     def predict_labels_binary(self, dists):
@@ -122,7 +121,7 @@ class KNN:
             # TODO: Implement choosing best class based on k
             # nearest training samples
             neighbors = self.train_y[np.argsort(dists[i])[:self.k]]
-            pred[i] = mode(neighbors).mode[0]
+            pred[i] = Counter(neighbors).most_common(n=1)[0][0]
         return pred
 
     def predict_labels_multiclass(self, dists):
@@ -144,5 +143,5 @@ class KNN:
             # TODO: Implement choosing best class based on k
             # nearest training samples
             neighbors = self.train_y[np.argsort(dists[i])[:self.k]]
-            pred[i] = mode(neighbors).mode[0]
+            pred[i] = Counter(neighbors).most_common(n=1)[0][0]
         return pred
