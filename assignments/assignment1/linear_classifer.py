@@ -58,12 +58,21 @@ def softmax_with_cross_entropy(predictions, target_index):
     '''
     # TODO implement softmax with cross-entropy
     # Your final implementation shouldn't have any loops
+    # probs = softmax(predictions.copy())
+
+    # loss = cross_entropy_loss(probs, target_index)
+
+    # target = np.eye(predictions.shape[0])[target_index]
+
+    # dprediction = -target * (1 - probs)
+    # return loss, dprediction
+
+    lenght = target_index.shape[0]
     probs = softmax(predictions)
-
+    dprediction = probs.copy()
     loss = cross_entropy_loss(probs, target_index)
-
-    dprediction = 0
-
+    dprediction[range(lenght), target_index.reshape(1, -1)] -= 1
+    dprediction = dprediction / lenght  # ????????????? нужно ли?
     return loss, dprediction
 
 
@@ -82,7 +91,7 @@ def l2_regularization(W, reg_strength):
 
     # TODO: implement l2 regularization and gradient
     # Your final implementation shouldn't have any loops
-    loss = reg_strength * np.sum(W**2)
+    loss = reg_strength * np.sum(W * W)
 
     grad = reg_strength * 2 * np.sum(W)
 
