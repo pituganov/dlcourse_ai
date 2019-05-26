@@ -14,15 +14,14 @@ def softmax(predictions: np.array):
         probability for every class, 0..1
     '''
     if len(predictions.shape) == 1:
-      probs = np.exp(predictions - np.max(predictions)) / \
-        np.sum(np.exp(predictions - np.max(predictions)))
-      return probs
+        probs = predictions.copy() - np.max(predictions)
+        result = np.exp(probs) / np.sum(np.exp(probs))
     else:
-      list_ = []
-      for axis in predictions:
-        probs = np.exp(axis - np.max(axis)) / np.sum(np.exp(axis - np.max(axis)))
-        list_.append(probs)
-      return np.array(list_)
+        max_array = np.repeat(np.max(predictions, axis=1), predictions.shape[1]).reshape(predictions.shape)
+        probs = predictions.copy() - max_array
+        result = np.exp(probs) / np.repeat(np.sum(np.exp(probs), axis=1), predictions.shape[1]).reshape(predictions.shape)
+
+    return result
 
 
 def cross_entropy_loss(probs, target_index):
@@ -38,17 +37,15 @@ def cross_entropy_loss(probs, target_index):
     Returns:
       loss: single value
     '''
-    p = probs.copy()
-    if len(probs.shape) == 1:
-        p = probs.reshape(1, -1)
-        log_likelihood = -np.log(probs[target_index])
-        
-        return log_likelihood
+    probs_copy = probs.copy()
+    if type(target_index) == int and len(probs.shape) == 1:
+        return -np.log(probs_copy[target_index])
     else:
-        lenght = target_index.shape[0]
-        log_likelihood = -np.log(probs[range(lenght), target_index.reshape(1, -1)])
+        length = target_index.shape[0]
+        log_likelihood = -np.log(
+            probs[range(length), target_index.reshape(1, -1)])
 
-        return np.sum(log_likelihood) / lenght
+        return np.sum(log_likelihood) / length
 
 
 def softmax_with_cross_entropy(predictions, target_index):
@@ -69,20 +66,22 @@ def softmax_with_cross_entropy(predictions, target_index):
     p = predictions.copy()
     target = target_index
     if len(predictions.shape) == 1:
-      p = p.reshape(1, -1)
-      target = np.array(target_index)
-    else:
-      target = target.reshape(-1)
+        p = p.reshape(1, -1)
+    if type(target_index) == int:
+        target = np.array([target_index])
+
     probs = softmax(p)
     loss = cross_entropy_loss(probs, target)
 
     y = np.eye(p.shape[1])[target]
-    y = y.reshape(-1)
+    y = y.reshape(p.shape[0], -1)
     dprediction = probs - y
-  
+
     if len(predictions.shape) == 1:
-      dprediction = dprediction.reshape(-1)
-      
+        dprediction = dprediction.reshape(-1)
+    else:
+        dprediction /= p.shape[0]
+
     return loss, dprediction
 
 
@@ -100,7 +99,7 @@ def l2_regularization(W: np.ndarray, reg_strength: float):
     '''
     loss = reg_strength * np.sum(W * W)
 
-    grad = reg_strength * 2 * np.sum(W)
+    grad = reg_strength * 2 * W
 
     return loss, grad
 
@@ -159,12 +158,12 @@ class LinearSoftmaxClassifier():
             batches_indices = np.array_split(shuffled_indices, sections)
 
             for batch in batches_indices:
-              loss, gradient = linear_softmax(X[batch], self.W, y[batch])
-              l2, grad_l2 = l2_regularization(self.W, reg)
-              loss += l2
-              gradient += grad_l2
+                loss, gradient = linear_softmax(X[batch], self.W, y[batch])
+                l2, grad_l2 = l2_regularization(self.W, reg)
+                loss += l2
+                gradient += grad_l2
 
-              self.W -= learning_rate * gradient
+                self.W -= learning_rate * gradient
 
             loss, _ = linear_softmax(X, self.W, y)
             l2, _ = l2_regularization(self.W, reg)
@@ -187,7 +186,7 @@ class LinearSoftmaxClassifier():
         '''
         y_pred = np.zeros(X.shape[0], dtype=np.int)
 
-        y_pred = softmax(W.T.dot(self.W))
+        y_pred = softmax(X.dot(self.W))
         y_pred = np.argmax(y_pred, axis=1)
 
         return y_pred
