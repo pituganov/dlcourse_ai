@@ -91,7 +91,7 @@ class ReLULayer:
         d_result: np array (batch_size, num_features) - gradient
           with respect to input
         """
-        return self.index
+        return self.index.astype(float) * d_out
 
     def params(self):
         # ReLU Doesn't have any parameters
@@ -122,17 +122,10 @@ class FullyConnectedLayer:
         d_result: np array (batch_size, n_input) - gradient
           with respect to input
         """
-        # TODO: Implement backward pass
-        # Compute both gradient with respect to input
-        # and gradients with respect to W and B
-        # Add gradients of W and B to their `grad` attribute
+        self.W.grad = self.X.T.dot(d_out)
+        self.B.grad = np.sum(d_out, axis=0, keepdims=True)
 
-        # It should be pretty similar to linear classifier from
-        # the previous assignment
-
-        d_input = self.X * self.W + self.B
-
-        return d_input
+        return d_out.dot(self.W.value.T)
 
     def params(self):
         return {'W': self.W, 'B': self.B}
