@@ -13,8 +13,10 @@ def l2_regularization(W, reg_strength):
       loss, single value - l2 regularization loss
       gradient, np.array same shape as W - gradient of weight by l2 loss
     """
-    # TODO: Copy from the previous assignment
-    raise Exception("Not implemented!")
+    loss = reg_strength * np.sum(W * W)
+
+    grad = reg_strength * 2 * W
+
     return loss, grad
 
 
@@ -33,10 +35,26 @@ def softmax_with_cross_entropy(preds, target_index):
       loss, single value - cross-entropy loss
       dprediction, np array same shape as predictions - gradient of predictions by loss value
     """
-    # TODO: Copy from the previous assignment
-    raise Exception("Not implemented!")
+    p = preds.copy()
+    target = target_index
+    if len(preds.shape) == 1:
+        p = p.reshape(1, -1)
+    if type(target_index) == int:
+        target = np.array([target_index])
 
-    return loss, d_preds
+    probs = softmax(p)
+    loss = cross_entropy_loss(probs, target)
+
+    y = np.eye(p.shape[1])[target]
+    y = y.reshape(p.shape[0], -1)
+    dprediction = probs - y
+
+    if len(preds.shape) == 1:
+        dprediction = dprediction.reshape(-1)
+    else:
+        dprediction /= p.shape[0]
+
+    return loss, dprediction
 
 
 class Param:
@@ -58,7 +76,8 @@ class ReLULayer:
         # TODO: Implement forward pass
         # Hint: you'll need to save some information about X
         # to use it later in the backward pass
-        raise Exception("Not implemented!")
+        self.index = X > 0
+        return X * self.index
 
     def backward(self, d_out):
         """
@@ -72,10 +91,7 @@ class ReLULayer:
         d_result: np array (batch_size, num_features) - gradient
           with respect to input
         """
-        # TODO: Implement backward pass
-        # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
-        return d_result
+        return self.index
 
     def params(self):
         # ReLU Doesn't have any parameters
@@ -89,9 +105,8 @@ class FullyConnectedLayer:
         self.X = None
 
     def forward(self, X):
-        # TODO: Implement forward pass
-        # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
+        self.X = X
+        return X.dot(self.W.value) + self.B.value
 
     def backward(self, d_out):
         """
@@ -115,7 +130,7 @@ class FullyConnectedLayer:
         # It should be pretty similar to linear classifier from
         # the previous assignment
 
-        raise Exception("Not implemented!")
+        d_input = self.X * self.W + self.B
 
         return d_input
 
