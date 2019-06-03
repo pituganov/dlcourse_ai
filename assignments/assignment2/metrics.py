@@ -9,8 +9,8 @@ def multiclass_accuracy(prediction, ground_truth):
     Returns:
     accuracy - ratio of accurate predictions to total samples
     """
+    # predicted_labels = prediction.argmax(axis=1)
+    accuracy = (prediction == ground_truth).sum()
+    accuracy /= prediction.shape[0]
 
-    # TODO: Implement computing accuracy
-    raise Exception("Not implemented!")
-
-    return 0
+    return accuracy

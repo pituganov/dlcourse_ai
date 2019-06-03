@@ -1,6 +1,54 @@
 import numpy as np
 
 
+
+def softmax(predictions: np.array):
+    '''
+    Computes probabilities from scores
+
+    Arguments:
+      predictions, np array, shape is either (N) or (batch_size, N) -
+        classifier output
+
+    Returns:
+      probs, np array of the same shape as predictions -
+        probability for every class, 0..1
+    '''
+    if len(predictions.shape) == 1:
+        probs = predictions.copy() - np.max(predictions)
+        result = np.exp(probs) / np.sum(np.exp(probs))
+    else:
+        max_array = np.repeat(np.max(predictions, axis=1), predictions.shape[1]).reshape(predictions.shape)
+        probs = predictions.copy() - max_array
+        result = np.exp(probs) / np.repeat(np.sum(np.exp(probs), axis=1), predictions.shape[1]).reshape(predictions.shape)
+
+    return result
+
+
+def cross_entropy_loss(probs, target_index):
+    '''
+    Computes cross-entropy loss
+
+    Arguments:
+      probs, np array, shape is either (N) or (batch_size, N) -
+        probabilities for every class
+      target_index: np array of int, shape is (1) or (batch_size) -
+        index of the true class for given sample(s)
+
+    Returns:
+      loss: single value
+    '''
+    probs_copy = probs.copy()
+    if type(target_index) == int and len(probs.shape) == 1:
+        return -np.log(probs_copy[target_index])
+    else:
+        length = target_index.shape[0]
+        log_likelihood = -np.log(
+            probs[range(length), target_index.reshape(1, -1)])
+
+        return np.sum(log_likelihood) / length
+
+
 def l2_regularization(W, reg_strength):
     """
     Computes L2 regularization loss on weights and its gradient
